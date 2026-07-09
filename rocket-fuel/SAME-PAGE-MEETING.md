@@ -4,9 +4,9 @@ The adversarial planning loop. Fable submits the plan, Codex attacks it as the I
 
 ## Inputs
 
-- `PLAN.md` (or the plan file the user pointed at)
+- The canonical plan file: `PLAN.md` for pipeline runs, or the file the user pointed at (copied into the repo as `RF-PLAN.md` if it lives outside). One file for the whole meeting; every revision lands in it. Call it `PLAN_FILE` below.
 - The Core Focus: one sentence from `VTO.md`, or from the user's request if there is no VTO
-- `MAX_ROUNDS` = 5 unless the user set another number
+- `MAX_ROUNDS` = 5 by default; whatever the user set is a hard cap, not a suggestion
 
 ## Round 1: fresh Codex session (read-only)
 
@@ -21,7 +21,7 @@ what breaks. Be skeptical and specific; you are not here to be agreeable.
 
 CORE FOCUS: <one sentence>
 
-Read the plan at <PLAN_FILE> and any repo files you need (you are read-only).
+Read the plan at <PLAN_FILE substituted here> and any repo files you need (you are read-only).
 
 For every issue you find, output one line in this exact shape:
 - [KILL|DEFER|FIX|CLARIFY] <root cause in one sentence> -> <one-line fix or question>
@@ -57,7 +57,7 @@ For each finding, run Identify / Discuss / Solve:
 
 1. **Identify.** Restate the real issue in one sentence. The stated problem is rarely the root; if Codex flagged a symptom, name the root yourself.
 2. **Discuss once.** Decide your position. You are the Visionary and the final arbiter of the plan: accept findings that are right, reject findings that miss the Core Focus or the user's stated constraints. Say it once; re-arguing a settled point in a later round is politicking.
-3. **Solve.** Apply accepted findings to `PLAN.md` immediately. DEFER items go to `ISSUES.md`. Rejected findings stay rejected with a reason in the log.
+3. **Solve.** Apply accepted findings to `PLAN_FILE` immediately. DEFER items go to `ISSUES.md` (or `RF-ISSUES.md` under the collision rule). Rejected findings stay rejected with a reason in the log.
 
 ## The log (`SAME-PAGE-LOG.md`)
 
@@ -77,9 +77,9 @@ Append per round, verbatim findings first, your response second:
 
 - `VERDICT: SAME PAGE` greppable in the last Codex reply: meeting over, proceed.
 - Round cap hit with `VERDICT: NOT YET`: STOP. Present the unresolved findings to the user in plain language with your recommendation. The user is the Owner's Box; they decide. Record the decision in the log as `USER OVERRIDE: <decision>`. A flagged deadlock beats a fake approval.
-- Codex call fails twice in a row: stop and surface the error. Do not silently continue without the review.
+- Codex call fails twice in a row: follow the invocation contract's failure ladder (retry, then a LOUDLY-announced degraded fresh session carrying the meeting summary, then stop and surface). Log `DEGRADED: fresh session from round N` in the meeting log if the fallback fires. Never silently continue without the review.
 
 ## Hygiene
 
 - One finding, one line, one disposition. No finding disappears without a logged reason.
-- Never let Codex edit files during this meeting. If the -o file mentions it changed something, treat it as a contract breach: `git status` immediately, revert anything dirty, restart the round with the sandbox forced per the invocation contract.
+- Never let Codex edit files during this meeting. The invocation contract snapshots status + diff before every call; if a read-only round changes files anyway, revert only previously-clean paths, STOP on mutated previously-dirty paths (surface, never auto-revert user work), then restart the round with the sandbox forced per the contract.

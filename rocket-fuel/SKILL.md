@@ -27,7 +27,7 @@ When more than one is accountable, nobody is. While Codex holds the build seat, 
 1. **Same page before code.** No build starts until the Same Page Meeting ends in `VERDICT: SAME PAGE`, or the user explicitly overrides.
 2. **No End Runs.** Mid-build change requests, whether from the user or from you, go onto the Issues List for the next review. Never into the working diff.
 3. **The Integrator is the Tie Breaker** on execution details: file layout, implementation order, library choice within stated constraints. The Visionary trumps only on vision or scope deviations, and logs why.
-4. **Bounded meetings.** Max 5 review rounds, max 2 fix rounds per rock. A flagged deadlock beats a fake approval. At the cap, the user decides: it is more important THAT you decide than WHAT you decide.
+4. **Bounded meetings.** Hard caps: 5 review rounds, 2 fix rounds per rock (the user may set different caps up front; whatever the number, it is a hard cap). A flagged deadlock beats a fake approval. At the cap, the user decides: it is more important THAT you decide than WHAT you decide.
 5. **Mutual respect.** Every Codex finding lands in the log verbatim, and you answer each one with accept or reject plus a reason. Never silently drop a finding.
 
 ## Phase 0: Preflight and Read the Room
@@ -51,13 +51,13 @@ Confirm in one line, then go: "Running a KICKOFF for <thing>. Say stop if you wa
    - Completion: user has confirmed; `VTO.md` exists with a one-sentence Core Focus.
 2. **Draft the plan.** Write `PLAN.md`: 3 to 7 Rocks in dependency order. Every rock has a "done looks like" and a proof command (a test, a build, a curl). If you have more than 7 rocks you are stuffing 100 pounds into a 50-pound bag: cut or merge. Do less better.
    - Completion: every rock has a runnable proof command.
-3. **Same Page Meeting.** Run the meeting per [SAME-PAGE-MEETING.md](SAME-PAGE-MEETING.md). Codex reviews read-only, you argue back, bounded rounds, verdict line, full log.
+3. **Same Page Meeting.** First `git init` if there is no repo yet and commit the planning artifacts (the snapshot discipline in the invocation contract depends on git existing before the FIRST Codex call). Then run the meeting per [SAME-PAGE-MEETING.md](SAME-PAGE-MEETING.md). Codex reviews read-only, you argue back, bounded rounds, verdict line, full log.
    - Completion: `VERDICT: SAME PAGE` in `SAME-PAGE-LOG.md`, or user override recorded.
-4. **The Integrator builds.** For each rock in order, hand Codex a frozen build contract per [CODEX-INTEGRATOR.md](CODEX-INTEGRATOR.md). Clean git tree before each rock. While it runs, you do not touch the code (Rule 2).
+4. **The Integrator builds.** For each rock in order, hand Codex a frozen build contract per [CODEX-INTEGRATOR.md](CODEX-INTEGRATOR.md). Baseline first: `git init` if there is no repo yet, and commit the planning artifacts before the first rock, so `git status` is empty when Codex launches and the build diff is exactly Codex's work. While it runs, you do not touch the code (Rule 2).
    - Completion: Codex reports files changed + proof output for the rock.
 5. **Level 10 Review** (per rock). You read the FULL diff (`git diff`), not Codex's summary. You run the proof command yourself: Codex's pasted output does not count as proof. Review with the smell vocabulary: duplicated code, mysterious names, feature envy, message chains, speculative generality. Anything off-track goes back as a fix round (resume the same Codex session, max 2), then you take the wheel and finish it yourself.
    - Completion: proof passes when YOU run it.
-6. **Close the meeting.** Report the scorecard: rocks done / total, proof results, deviations accepted, issues deferred. Offer the commit. Commits are user-gated and Fable-authored; Codex never commits.
+6. **Close the meeting.** Report the scorecard: rocks done / total, proof results, deviations accepted, issues deferred. Offer the commit. Code commits are user-gated and Fable-authored (the planning-artifact baseline commits are machinery: announced, not asked); Codex never commits.
 
 ## Function 2: CLARITY BREAK (refactor an existing repo)
 
@@ -69,7 +69,7 @@ Confirm in one line, then go: "Running a KICKOFF for <thing>. Say stop if you wa
 
 ## Function 3: SAME PAGE MEETING (standalone)
 
-Read the plan file the user pointed at. Run [SAME-PAGE-MEETING.md](SAME-PAGE-MEETING.md) against it as-is. Deliver the verdict, the revised plan, and the log. Then offer, once: continue into BUILD A ROCK, or stop here.
+The file the user pointed at becomes the canonical plan file for the whole run: every revision lands in THAT file, not in a new `PLAN.md`. If it lives outside the repo, copy it in as `RF-PLAN.md` first (Codex reviews inside the repo; the original stays untouched). Run [SAME-PAGE-MEETING.md](SAME-PAGE-MEETING.md) against it, deliver the verdict, the revised plan, and the log. Then offer, once: continue into BUILD A ROCK, or stop here.
 
 ## Function 4: BUILD A ROCK (standalone)
 
@@ -88,7 +88,9 @@ If the user handed you a frozen spec file, use it. If they handed you a sentence
 
 ## Artifacts
 
-`VTO.md` (kickoff only) · `PLAN.md` (the what) · `SAME-PAGE-LOG.md` (the why, round by round) · `ISSUES.md` (clarity break + every deferred end-run). All at repo root, all committed with the work.
+`VTO.md` (kickoff only) · `PLAN.md` (the what) · `SAME-PAGE-LOG.md` (the why, round by round) · `ISSUES.md` (clarity break + every deferred end-run). All at repo root, committed as a baseline before the first build.
+
+**Collision rule:** before writing any artifact, check whether that filename already exists with unrelated content. If it does, prefix every artifact this run with `RF-` (`RF-PLAN.md`, `RF-ISSUES.md`, ...) and tell the user in one line. Never overwrite a file this skill did not write. Everywhere this skill names `PLAN.md`, `ISSUES.md`, or the log, it means the run's ACTUAL paths after this rule.
 
 ---
-Credits: operating system from *Rocket Fuel* (Wickman & Winters). Codex plumbing built on chaseai-yt/grill-me-codex (MIT) and skills-directory/skill-codex; authoring patterns from mattpocock/skills.
+Based on the Visionary/Integrator operating system from *Rocket Fuel* by Gino Wickman and Mark C. Winters.

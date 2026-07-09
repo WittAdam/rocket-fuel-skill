@@ -34,6 +34,6 @@ From there the skill walks you through it: one interview question at a time with
 
 ## Credits
 
-Operating system from *Rocket Fuel* (Wickman & Winters). Codex plumbing built on [grill-me-codex](https://github.com/chaseai-yt/grill-me-codex) by Chase AI and [skill-codex](https://github.com/skills-directory/skill-codex); interview mechanics from [Matt Pocock's skills](https://github.com/mattpocock/skills). Packaged by [@NulightJens](https://github.com/NulightJens).
+Based on the Visionary/Integrator operating system from *Rocket Fuel* by Gino Wickman and Mark C. Winters. Built by [@NulightJens](https://github.com/NulightJens).
 
 MIT License.
