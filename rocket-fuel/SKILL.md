@@ -11,6 +11,8 @@ It takes two. One sees the future, one makes it happen. Vision without execution
 
 The user runs `/rocket-fuel <anything in plain English>`. You detect the function (Phase 0), confirm it in one line, and drive the whole thing. The user makes decisions at exactly three gates: the Grill answers, the deadlock tie-break (rare), and the final commit. Everything else runs itself.
 
+**Guide the user the whole way.** Assume they have never seen this system. After confirming the function, tell them in 2-3 lines which stages are coming and where their three gates are. Announce every stage transition in one line ("Same Page Meeting, round 2: Codex is verifying its round-1 findings were addressed"). When the run ends, list the artifacts that now exist and the single next step. Never go silent for a long Codex call: say what is running and roughly how long it takes before you launch it.
+
 ## The Accountability Chart (one person per seat)
 
 | Seat | Held by | Five accountabilities |
