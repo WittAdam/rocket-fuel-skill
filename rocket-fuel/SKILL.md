@@ -22,17 +22,47 @@ The user runs `/rocket-fuel <anything in plain English>`. You detect the functio
 
 When more than one is accountable, nobody is. While Codex holds the build seat, Fable does not write implementation code. The only exception is the documented takeover rule in the Level 10 review.
 
-## The 5 Rules
+## The 6 Rules
 
 1. **Same page before code.** No build starts until the Same Page Meeting ends in `VERDICT: SAME PAGE`, or the user explicitly overrides.
 2. **No End Runs.** Mid-build change requests, whether from the user or from you, go onto the Issues List for the next review. Never into the working diff.
 3. **The Integrator is the Tie Breaker** on execution details: file layout, implementation order, library choice within stated constraints. The Visionary trumps only on vision or scope deviations, and logs why.
 4. **Bounded meetings.** Hard caps: 5 review rounds, 2 fix rounds per rock (the user may set different caps up front; whatever the number, it is a hard cap). A flagged deadlock beats a fake approval. At the cap, the user decides: it is more important THAT you decide than WHAT you decide.
 5. **Mutual respect.** Every Codex finding lands in the log verbatim, and you answer each one with accept or reject plus a reason. Never silently drop a finding.
+6. **Claim before you run.** This skill writes fixed filenames to the repo root and lets Codex write files unsupervised. Two people running it on one repo collide. Take the lease in Phase 0 and hold it for the whole run; a lease you could not write is NOT permission to proceed.
 
 ## Phase 0: Preflight and Read the Room
 
-Preflight once per session: run `codex --version` (Bash). If it fails (including a `spawn ... ENOENT` from a broken npm install), fix with `npm i -g @openai/codex@latest`; if auth errors appear later, the user runs `codex login`. Never fake the Integrator with a subagent.
+**Step 0 - claim the repo. Do this before `codex --version`, before reading the request, before anything.**
+
+This skill is used by more than one person against shared repos. Its artifacts (`VTO.md`, `PLAN.md`, `ISSUES.md`, `SAME-PAGE-LOG.md`) are fixed filenames at the repo root, and the `RF-` collision rule below only fires on UNRELATED content -- so a second rocket-fuel run lands straight on top of the first. Take an exclusive lease:
+
+```bash
+py ~/.claude/session-mailbox.py claim --resource "rocket-fuel:$(basename "$PWD")" --ttl 180
+```
+
+Read the exit code and obey it:
+
+| Exit | Meaning | What you do |
+|---|---|---|
+| 0 | You hold the lease | Proceed. Tell the user in one line that you hold it and for how long. |
+| 1 | Someone else holds it | **STOP.** Name who holds it and how long is left. Do not run. Do not "just look at one thing first". |
+| anything else | The relay was unreachable, or the lease dir is not writable | **STOP.** A claim that could not be WRITTEN is not a free repo -- it is an unknown one. Say exactly that and let the user decide whether to override. Never treat a failed write as an empty lock. |
+
+Release on every exit path, including abort and error:
+
+```bash
+py ~/.claude/session-mailbox.py release --resource "rocket-fuel:$(basename "$PWD")"
+```
+
+If the user is working solo in a repo nobody else touches, they may say "skip the claim" -- honour it, but say once that you are running unprotected.
+
+**Then preflight Codex once per session:** run `codex --version` (Bash).
+
+- **On Windows, check where Codex came from BEFORE installing anything.** If it came from the Codex desktop app (`%LOCALAPPDATA%\OpenAI\Codexin\<hash>\codex.exe`), do **not** run `npm i -g @openai/codex@latest` -- you will install a second, competing copy.
+- `codex: command not found` under Claude Code on Windows is almost never a broken install. Claude Code shells out through git-bash, and `codex` is a `.cmd` that only PowerShell resolves. The fix is a shim named `codex` (no extension) on the bash PATH that execs the real binary -- not an npm install.
+- On macOS/Linux, a genuine `spawn ... ENOENT` does mean a broken npm install: fix with `npm i -g @openai/codex@latest`.
+- If auth errors appear later, the user runs `codex login`. Never fake the Integrator with a subagent.
 
 Then detect the function:
 
@@ -89,6 +119,8 @@ If the user handed you a frozen spec file, use it. If they handed you a sentence
 ## Artifacts
 
 `VTO.md` (kickoff only) · `PLAN.md` (the what) · `SAME-PAGE-LOG.md` (the why, round by round) · `ISSUES.md` (clarity break + every deferred end-run). All at repo root, committed as a baseline before the first build.
+
+**Lease:** the run also holds `rocket-fuel:<repo>` in the session relay for its whole duration (Phase 0). The collision rule below protects against unrelated files; the lease is what protects against another PERSON running this skill on the same repo.
 
 **Collision rule:** before writing any artifact, check whether that filename already exists with unrelated content. If it does, prefix every artifact this run with `RF-` (`RF-PLAN.md`, `RF-ISSUES.md`, ...) and tell the user in one line. Never overwrite a file this skill did not write. Everywhere this skill names `PLAN.md`, `ISSUES.md`, or the log, it means the run's ACTUAL paths after this rule.
 
