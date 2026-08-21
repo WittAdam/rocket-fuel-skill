@@ -57,6 +57,11 @@ If you touch that table, keep exit 3 distinct from exit 1. Collapsing them makes
 share indistinguishable from a colleague working, which is the exact failure the gate exists
 to prevent.
 
+**The gate is live as of 2026-08-20.** `claim` / `release` / `claims` now exist in the copy the
+hook actually runs (`C:\Users\adamp\.claude\session-mailbox.py`) and were smoke-tested end to
+end: claim exit 0, release exit 0, real holder name. The unwritable-directory case genuinely
+returns 3 rather than 1, so the table above is enforced by the client, not merely documented here.
+
 ## Windows traps (both cost real time on 2026-08-19)
 
 - Codex here is the **desktop app** build, not npm. Running `npm i -g @openai/codex@latest`
@@ -66,6 +71,12 @@ to prevent.
   named `codex` (no extension) on the bash PATH — Adam's lives at `C:\Users\adamp\bin\codex`
   and discovers `%LOCALAPPDATA%\OpenAI\Codex\bin\<hash>\codex.exe` at runtime, since the hash
   directory changes on app updates.
+- **A Windows env var set today is invisible to a process started yesterday.** `codex` inherits
+  its environment from whatever launched it, so a token added to the user environment is not
+  visible to an already-running Claude Code session, nor to the `codex` that session spawns --
+  which is exactly how this skill calls it. A `bearer_token_env_var` then resolves to nothing and
+  the MCP server fails auth for no visible reason. One restart of Claude Code fixes it. Bites
+  `GITHUB_PERSONAL_ACCESS_TOKEN` and `CLAUDE_MAILBOX_HMAC_KEY` alike.
 
 ## Installing / updating
 
@@ -83,6 +94,28 @@ That third line is the step people forget. If the gate misbehaves, check that th
 copy actually matches this one before debugging anything else.
 
 Both Adam and Russ install from **the fork**. Anyone installing from upstream gets no gate.
+
+Adam's installed copy has been the gated fork since 2026-08-20; before that it was plain upstream.
+Russ's setup email predates the gate and still points at upstream -- he has not been re-sent yet.
+
+## Codex MCP plugins
+
+`~/.codex/config.toml` lists MCP servers that load on **every** `codex` run, which is why their
+auth state shows up in this skill's output. State as of 2026-08-20:
+
+- **github -- authenticated.** `codex mcp login github` does not work here; GitHub's endpoint
+  rejects the dynamic client registration Codex attempts. The route that works is a bearer token
+  held by *reference*, so no secret lands in the config file:
+
+  ```bash
+  codex mcp add github --url "https://api.githubcopilot.com/mcp/" \
+    --bearer-token-env-var GITHUB_PERSONAL_ACCESS_TOKEN
+  ```
+
+  Verified by MCP `initialize` handshake: HTTP 200, `serverInfo: github-mcp-server`. Subject to
+  the env-var trap above.
+- **stripe -- deliberately unauthenticated.** Adam's call, 2026-08-20. It logs an auth failure on
+  every run; that noise is expected, not a regression.
 
 ## Do not
 
