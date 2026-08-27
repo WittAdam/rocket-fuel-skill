@@ -2,6 +2,8 @@
 
 Every Codex call in this skill goes through these exact patterns. They encode real traps; do not improvise around them. Verified live on codex-cli 0.143.0.
 
+🛑 **These are `codex` CLI patterns. Never substitute the `mcp__codex__*` MCP tools**, even if a project registers a `codex` MCP server and they load. The MCP path skips non-negotiable #1 below (the stdin redirect that prevents the 0-CPU hang) and delegates progress-reporting to a server that can go silent — on 2026-08-26 an `mcp__codex__codex` call hung 30 minutes with no output before the harness killed it. CLI only.
+
 ## The non-negotiables (every call)
 
 1. **Prompts go in via a file on stdin** (`- <"$FILE"`), never as an argv string. This kills two traps at once: shell-quoting bugs and the stdin hang (`codex exec` reads stdin in addition to any argv prompt; under a non-TTY harness an unredirected call blocks forever at 0 CPU). If you ever must pass an argv prompt, append `< /dev/null`.

@@ -59,6 +59,8 @@ If the user is working solo in a repo nobody else touches, they may say "skip th
 
 **Then preflight Codex once per session:** run `codex --version` (Bash).
 
+🛑 **Codex is ALWAYS the CLI, NEVER an MCP.** Invoke it only through the `codex exec` patterns in [CODEX-INTEGRATOR.md](CODEX-INTEGRATOR.md). Do **NOT** use `mcp__codex__*` tools even if a project's `.mcp.json` registers a `codex` server and they load — that path bypasses the mandatory stdin redirect (`- <"$FILE"`) that prevents the documented 0-CPU stdin hang, and it hands progress-reporting to an MCP server that can go silent. On 2026-08-26 exactly this happened: an `mcp__codex__codex` call hung with no output for 30 minutes until the harness idle-timeout killed it, wasting the whole Integrator pass. If you see `mcp__codex__*` tools available, that is a misconfiguration to route around, not the Integrator — shell out to the CLI.
+
 - **On Windows, check where Codex came from BEFORE installing anything.** If it came from the Codex desktop app (`%LOCALAPPDATA%\OpenAI\Codexin\<hash>\codex.exe`), do **not** run `npm i -g @openai/codex@latest` -- you will install a second, competing copy.
 - `codex: command not found` under Claude Code on Windows is almost never a broken install. Claude Code shells out through git-bash, and `codex` is a `.cmd` that only PowerShell resolves. The fix is a shim named `codex` (no extension) on the bash PATH that execs the real binary -- not an npm install.
 - On macOS/Linux, a genuine `spawn ... ENOENT` does mean a broken npm install: fix with `npm i -g @openai/codex@latest`.
